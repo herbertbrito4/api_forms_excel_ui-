@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOGIX | Fluxo de Entrada</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #050507; --card: #0f0f13; --border: #1f1f27; --accent: #00ff88; --text: #e0e0e0; }
+        body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; margin: 0; padding: 10px; display: flex; justify-content: center; min-height: 100vh; }
+        .terminal-window { width: 100%; max-width: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .terminal-header { background: #16161d; padding: 12px 20px; border-bottom: 1px solid var(--border); font-family: 'Syne'; font-size: 0.8rem; font-weight: 800; color: var(--accent); }
+        .form-content { padding: 20px; }
+        .field-group { margin-bottom: 20px; }
+        .hidden { display: none; }
+        label { display: block; font-size: 0.65rem; margin-bottom: 8px; letter-spacing: 1.5px; font-weight: bold; }
+        input, select, textarea { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; font-family: 'JetBrains Mono'; font-size: 0.9rem; border-radius: 4px; box-sizing: border-box; outline: none; }
+        input:focus, select:focus { border-color: var(--accent); }
+        .btn-send { width: 100%; background: var(--accent); color: #000; border: none; padding: 15px; font-family: 'Syne'; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+        .logic-branch { border-left: 2px solid #333; padding-left: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="terminal-window">
+    <div class="terminal-header">RECEBIMENTO DE NOTA FISCAL</div>
+
+    <form class="form-content" id="logixForm" 
+          action="https://docs.google.com/forms/d/e/1FAIpQLScwMJlkPYlo0u95NUvgLPyFD33Srr6Y9KEFRPGux9KDT-aOzA/formResponse" 
+          method="POST" target="hidden_iframe">
+
+        <input type="hidden" name="fbzx" value="-4576648276539686359">
+        <input type="hidden" name="pageHistory" id="pageHistory" value="0">
+        <input type="hidden" name="fvv" value="1">
+
+        <div class="field-group">
+            <label>SOLICITANTE</label>
+            <input type="hidden" name="entry.1680170285_sentinel">
+            <select name="entry.1680170285" required>
+                <option value="" disabled selected>SELECIONE...</option>
+                <option value="XXXX">XXXX</option>
+                <option value="YYYY">YYYY</option>
+            </select>
+        </div>
+
+        <div class="field-group">
+            <label>FORNECEDOR</label>
+            <input type="hidden" name="entry.1864982180_sentinel">
+            <select name="entry.1864982180" required>
+                <option value="" disabled selected>SELECIONE...</option>
+                <option value="EMPRESA DO GRUPO X">EMPRESA DO GRUPO X</option>
+                <option value="EMPRESA DO GRUPO Y">EMPRESA DO GRUPO Y</option>
+            </select>
+        </div>
+
+        <div class="field-group">
+            <label>NUMERO DA NF</label>
+            <input type="number" name="entry.1184335515" required>
+        </div>
+
+        <div class="field-group">
+            <label>RESPONSAVEL</label>
+            <input type="hidden" name="entry.1109737658_sentinel">
+            <select name="entry.1109737658" id="responsavel" required>
+                <option value="" disabled selected>SELECIONE...</option>
+                <option value="TERCEIROS (LUCAS)">TERCEIROS (LUCAS)</option>
+                <option value="FATURAMENTO (XXX)">FATURAMENTO (XXX)</option>
+                <option value="LOJA / DEVOLUÇÃO (YYY)">LOJA / DEVOLUÇÃO (YYY)</option>
+            </select>
+        </div>
+
+        <div class="field-group hidden logic-branch" id="group_conferencia">
+            <label>HOUVE CONFERENCIA FISICA?</label>
+            <input type="hidden" name="entry.1882664993_sentinel">
+            <select name="entry.1882664993" id="conferencia">
+                <option value="" selected>SELECIONE...</option>
+                <option value="SIM">SIM</option>
+                <option value="NÃO">NÃO</option>
+            </select>
+        </div>
+
+        <div class="field-group hidden logic-branch" id="group_divergencia">
+            <label>TEVE ALGUMA DIVERGENCIA?</label>
+            <input type="hidden" name="entry.1353914789_sentinel">
+            <select name="entry.1353914789" id="divergencia">
+                <option value="" selected>SELECIONE...</option>
+                <option value="SIM">SIM</option>
+                <option value="NÃO">NÃO</option>
+            </select>
+        </div>
+
+        <div class="field-group hidden logic-branch" id="group_detalhes">
+            <label>DETALHE AS DIVERGENCIAS</label>
+            <textarea name="entry.2030837039" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="btn-send" id="submitBtn">ENVIAR PARA LANÇAMENTO</button>
+    </form>
+</div>
+
+<iframe name="hidden_iframe" style="display:none;" onload="if(submitted){onSuccess()}"></iframe>
+
+<script>
+    var submitted = false;
+    const resp = document.getElementById('responsavel');
+    const conf = document.getElementById('conferencia');
+    const divg = document.getElementById('divergencia');
+    const pHist = document.getElementById('pageHistory');
+
+    // Lógica para mostrar campos e ajustar o pageHistory
+    resp.onchange = () => {
+        if(resp.value === 'TERCEIROS (LUCAS)') {
+            document.getElementById('group_conferencia').classList.remove('hidden');
+            pHist.value = "0,1"; // Adiciona páginas ao histórico
+        } else {
+            document.getElementById('group_conferencia').classList.add('hidden');
+            pHist.value = "0";
+        }
+    };
+
+    conf.onchange = () => {
+        if(conf.value === 'SIM') {
+            document.getElementById('group_divergencia').classList.remove('hidden');
+            pHist.value = "0,1,2";
+        } else {
+            document.getElementById('group_divergencia').classList.add('hidden');
+            pHist.value = "0,1";
+        }
+    };
+
+    divg.onchange = () => {
+        if(divg.value === 'SIM') {
+            document.getElementById('group_detalhes').classList.remove('hidden');
+            pHist.value = "0,1,2,3";
+        } else {
+            document.getElementById('group_detalhes').classList.add('hidden');
+            pHist.value = "0,1,2";
+        }
+    };
+
+    document.getElementById('logixForm').onsubmit = () => {
+        submitted = true;
+        document.getElementById('submitBtn').innerText = "CONECTANDO...";
+    };
+
+    function onSuccess() {
+        alert("DADOS INTEGRADOS!");
+        window.location.reload();
+    }
+</script>
+</body>
+</html>
